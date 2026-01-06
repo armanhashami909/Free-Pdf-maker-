@@ -1,0 +1,121 @@
+flutter create ai_pdf_maker
+cd ai_pdf_maker
+flutter doctor
+pdf: ^3.10.4
+printing: ^5.11.0
+image_picker: ^1.0.4
+http: ^1.2.0
+google_mobile_ads: ^5.0.0
+flutter pub get
+import 'dart:convert';
+import 'package:http/http.dart' as http;
+
+class AiService {
+  static Future<String> generateText(String prompt) async {
+    final response = await http.post(
+      Uri.parse("https://api.openai.com/v1/chat/completions"),
+      headers: {
+        "Content-Type": "application/json",
+        "Authorization": "Bearer YOUR_API_KEY"
+      },
+      body: jsonEncode({
+        "model": "gpt-3.5-turbo",
+        "messages": [
+          {"role": "user", "content": prompt}
+        ]
+      }),
+    );
+
+    if (response.statusCode == 200) {
+      return jsonDecode(response.body)['choices'][0]['message']['content'];
+    } else {
+      return "AI error";
+    }
+  }
+}
+import 'package:pdf/widgets.dart' as pw;
+import 'package:printing/printing.dart';
+
+class PdfService {
+  static Future<void> createPdf(String text) async {
+    final pdf = pw.Document();
+
+    pdf.addPage(
+      pw.Page(
+        build: (context) => pw.Text(text),
+      ),
+    );
+
+    await Printing.layoutPdf(
+      onLayout: (format) async => pdf.save(),
+    );
+  }
+}
+final image = pw.MemoryImage(imageBytes);
+
+pdf.addPage(
+  pw.Page(
+    build: (context) => pw.Center(child: pw.Image(image)),
+  ),
+);
+import 'package:flutter/material.dart';
+import 'services/pdf_service.dart';
+
+void main() {
+  runApp(MyApp());
+}
+
+class MyApp extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    return MaterialApp(
+      home: Home(),
+    );
+  }
+}
+
+class Home extends StatefulWidget {
+  @override
+  State<Home> createState() => _HomeState();
+}
+
+class _HomeState extends State<Home> {
+  TextEditingController textCtrl = TextEditingController();
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(title: Text("AI PDF Maker")),
+      body: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          children: [
+            TextField(
+              controller: textCtrl,
+              maxLines: 5,
+              decoration: InputDecoration(
+                hintText: "Enter text / Hindi / English",
+                border: OutlineInputBorder(),
+              ),
+            ),
+            SizedBox(height: 10),
+            ElevatedButton(
+              onPressed: () {
+                PdfService.createPdf(textCtrl.text);
+              },
+              child: Text("Generate PDF"),
+            )
+          ],
+        ),
+      ),
+    );
+  }
+}
+BannerAd(
+  adUnitId: 'ca-app-pub-xxxx',
+  size: AdSize.banner,
+  request: AdRequest(),
+  listener: BannerAdListener(),
+)..load();
+flutter build apk
+build/app/outputs/flutter-apk/app-release.apk
